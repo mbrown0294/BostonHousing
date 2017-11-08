@@ -3,8 +3,6 @@ import pandas as pd
 
 
 def number_clean(df):
-    # df.drop("SalePrice", 1, inplace=True)
-    df.drop(df.columns[len(df.columns) - 1], axis=1, inplace=True)
     is_numeric = ((df.dtypes == "int64") | (df.dtypes == "float64")).values
     numeric_columns = df.columns[is_numeric]
     for col_name in numeric_columns:
@@ -18,17 +16,27 @@ def object_clean(df):
     df.PavedDrive = np.where(df.PavedDrive == 'Y', 1, 0)
 
 
-def clean(df, og):
+def clean(df, is_train):
     object_clean(df)
     number_clean(df)
-    df[og] = y
-    df.to_csv("cleanTrain.csv", index=False)
+    if is_train:
+        df.to_csv("cleanTrain.csv", index=True)
+    else:
+        df.to_csv("cleanTest.csv", index=True)
     return df
 
 
+def run(csv, is_train):
+    housing = pd.read_csv(csv)
+    housing.set_index('Id', drop=True, inplace=True)
+    if 'SalePrice' in housing.columns:
+        housing.SalePrice.to_csv('train_prices.csv')
+        housing.drop('SalePrice', 1, inplace=True)
+    data = clean(housing, is_train)
+    print(data)
+
+
 if __name__ == '__main__':
-    housing = pd.read_csv("train.csv")
-    raw1 = pd.read_csv("train.csv")
-    y = housing.SalePrice.values
-    y_name = 'SalePrice'
-    print(clean(housing, y_name))
+    run('train.csv', True)
+    run('test.csv', False)
+
