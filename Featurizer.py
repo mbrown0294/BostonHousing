@@ -23,20 +23,29 @@ def replace(df):
                         (np.isnan(category) and np.isnan(column[index]))):
                     column[index] = cats.index(category)
     df_objects = df.select_dtypes(include=[object])
-    new_df = (pd.get_dummies(df_objects))
-    new_df['SalePrice'] = y
+    dummy_df = pd.get_dummies(df_objects, drop_first=True)
+    dummy_df.to_csv('dummies.csv')
     return df
 
 
-def featurize(df):
-    replace(df).to_csv("featurizedTrain.csv", index=False)
-    new_housing_csv = pd.read_csv("featurizedTrain.csv")
-    return new_housing_csv
+def featurize(df, is_train):
+    print(replace(df))
+    if is_train:
+        df.to_csv("featurizedTrain.csv", index=True)
+    else:
+        df.to_csv("featurizedTest.csv", index=True)
+    return df
 
+
+def run(csv, is_train):
+    housing = pd.read_csv(csv)
+    if not is_train:
+        housing.set_index('Id', drop=True, inplace=True)
+    data = featurize(housing, is_train)
+    #print(data)
 
 if __name__ == '__main__':
-    housing = pd.read_csv("cleanTrain.csv")
-    raw2 = pd.read_csv("cleanTrain.csv")
-    y = housing.SalePrice.values
-    print(featurize(housing))
+    run('cleanTrain.csv', True)
+    # run('cleanTest.csv', False)
+
 
