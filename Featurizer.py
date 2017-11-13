@@ -29,9 +29,9 @@ def replace(df):
 
 
 def featurize(df, is_train):
-    print(replace(df))
+    replace(df)
     if is_train:
-        df.to_csv("featurizedTrain.csv", index=True)
+        df.to_csv("featurizedTrain.csv", index=False)
     else:
         df.to_csv("featurizedTest.csv", index=True)
     return df
@@ -42,10 +42,9 @@ def run(csv, is_train):
     if not is_train:
         housing.set_index('Id', drop=True, inplace=True)
     data = featurize(housing, is_train)
-    #print(data)
+    print(data)
+
 
 if __name__ == '__main__':
     run('cleanTrain.csv', True)
-    # run('cleanTest.csv', False)
-
-
+    run('cleanTest.csv', False)

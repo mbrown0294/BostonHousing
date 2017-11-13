@@ -1,7 +1,5 @@
 from sklearn import linear_model
 import pandas as pd
-from sklearn.metrics import mean_squared_error
-# from sklearn.feature_selection import SelectFromModel
 
 
 def train(model, x_train, y_train):
@@ -9,34 +7,39 @@ def train(model, x_train, y_train):
 
 
 def predict(model, x_test):
-    price_pred = model.predict(x_test)
-    return price_pred
+    predicted_price = model.predict(x_test)
+    return predicted_price
 
 
 def evaluate(y_true, y_pred, metric):
-    # selector = SelectFromModel(model, )
     return metric(y_true, y_pred)
 
 
 if __name__ == "__main__":
     housing_train = pd.read_csv("featurizedTrain.csv")
+    # Shape: (1460, 79)
     housing_test = pd.read_csv("featurizedTest.csv")
-    housing_test.set_index('Id', drop=True, inplace=True)
-    # prices = housing.SalePrice.values
-    # values = housing.drop("SalePrice", 1).values
+    housing_test.set_index('Id', drop=True, inplace=True)  # Maintains 'Id' values
+    # Shape: (1459, 79)
     # Setting the models
     logReg = linear_model.LogisticRegression()
     linReg = linear_model.LinearRegression()
     # Creating the CSV
-    x_train = housing_train.drop('SalePrice',1).values
-    y_train = housing_train.SalePrice.values
-    x_test = housing_test.values
-    train(linReg, x_train=x_train, y_train=y_train)
+    train_x = housing_train.values
+    train_y = pd.read_csv("train_prices.csv").values
+    test_x = housing_test.values
+    train(linReg, x_train=train_x, y_train=train_y)  # Trains model (works)
     index = housing_test.index
+    price_pred = predict(linReg, housing_test)  # Predicted prices (got values, at least)
     pred_df = pd.DataFrame(index=index)
-    price_pred = predict(linReg,housing_test)
     pred_df['SalePrice'] = price_pred
-    pred_df.to_csv("Submission.csv")
 
-    # print(evaluate(values, prices, logReg, mean_squared_error))  # 91950248.2877
-    # print(evaluate(values, prices, linReg, mean_squared_error))  # 867849985.001
+    # print(pred_df)
+    # Getting negatives for some reason. Might be incorrectly featurized?
+    # Following for-loop returns all negatives predicted and their indices
+
+    # for i in range(len(pred_df.SalePrice)):
+    #     if pred_df.get_value(i, 0, takeable=True) < 0:
+    #         print(i, ", ", pred_df.get_value(i, 0, takeable=True))
+
+    pred_df.to_csv("Submission.csv")
