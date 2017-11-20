@@ -1,50 +1,100 @@
-from sklearn import linear_model
 import pandas as pd
-from sklearn.feature_selection import SelectKBest
+import numpy as np
 from sklearn.feature_selection import chi2
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression, Lasso, LinearRegression
+from sklearn.metrics import mean_squared_error, make_scorer , mean_absolute_error, median_absolute_error
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split, cross_val_score
+
+# from sklearn.feature_selection import SelectKBest
 
 
-def train(selector, model, x_train, y_train, x_test):
+# Trains the data with a SelectKBest model
+def train(selector, mod, train_x, train_y, x_test):
     selector = selector(chi2, k=12)
-    x_train_clean = selector.fit_transform(x_train, y_train)
+    x_train_clean = selector.fit_transform(train_x, train_y)
     x_test_clean = selector.transform(x_test)
-    model.fit(x_train_clean, y_train)
+    mod.fit(x_train_clean, train_y)
     return x_test_clean
 
 
-def predict(model, x_test):
-    predicted_price = model.predict(x_test)
+# Creates predicted values of 'y'
+def pred(mod, x_test):
+    predicted_price = mod.predict(x_test)
     return predicted_price
 
 
-def evaluate(y_true, y_pred, metric):
-    return metric(y_true, y_pred)
+def evaluate(y_true, y_pred, metr):
+    return metr(y_true, y_pred)
 
 
 if __name__ == "__main__":
     housing_train = pd.read_csv("featurizedTrain.csv")
-    # Shape: (1460, 79)
     housing_test = pd.read_csv("featurizedTest.csv")
     housing_test.set_index('Id', drop=True, inplace=True)  # Maintains 'Id' values
-    # Shape: (1459, 79)
-    # Setting the models
-    logReg = linear_model.LogisticRegression()
-    linReg = linear_model.LinearRegression()
-    # Creating the CSV
-    train_x = housing_train.values
-    train_y = pd.read_csv("train_prices.csv").values
-    test_x = housing_test.values
-    new_test_x = train(SelectKBest, linReg, train_x, train_y, test_x)  # Trains model
+
+# Set metric
+    # metric = mean_squared_error
+    metric = median_absolute_error
+    # metric = mean_absolute_error
+
+
+# Set model
+    # model = LinearRegression()
+    model = RandomForestRegressor()
+    # model = LogisticRegression()
+    # model = Lasso()
+
+# Setting data variables
+    X = housing_train.values  # Shape: (1460, 79)
+    y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
+    test_x = housing_test.values  # Shape: (1459, 79)
+    price_true = pd.read_csv("train_prices.csv")
+
+# train_test_split validation
+    X_train, X_val, y_train, y_val = train_test_split(
+       X, y, test_size=0.33, random_state=42)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_val)
+    y_val = y_val.reshape(y_val.shape[:1])
+    metric(y_val, y_pred)
+
+    model.fit(X, y)
+    price_pred = model.predict(test_x)
     index = housing_test.index
-    price_pred = predict(linReg, new_test_x)  # Predicted prices (got values, at least)
     pred_df = pd.DataFrame(index=index)
     pred_df['SalePrice'] = price_pred
+    print(pred_df)
     pred_df.to_csv("Submission.csv")
 
-# Getting negatives for some reason. Might be incorrectly featurized?
-    # Following for-loop returns all negatives predicted and their indices
-    #
-    for i in range(len(pred_df.SalePrice)):
-        if pred_df.get_value(i, 0, takeable=True) < 0:
-            print(i, ", ", pred_df.get_value(i, 0, takeable=True))
+
+# EXTRAS #
+
+
+# Returns all negatives predicted (and their indices):
+    # for i in range(len(pred_df.SalePrice)):
+    #     if pred_df.get_value(i, 0, takeable=True) < 0:
+    #         print(i, ", ", pred_df.get_value(i, 0, takeable=True))
+
+
+# TESTING #
+
+# Model: RandomForest
+    # Metric: MedianAbs: 11,549.0 - 11,189.2 - 11,876.35 <---- WINNER
+    # Metric: MeanAbs: 19,100.3680498
+    # Metric: MeanSq: 982,556,345.949 - 1,358,389,203.78
+
+# Model: Lasso
+    # Metric: MedianAbs: 16,029.5013744
+    # Metric: MeanAbs: 21,906.9826906
+    # Metric: MeanSq: 1,192,649,897.97
+
+# Model: LogReg
+    # Metric: MedianAbs: 26,250.0
+    # Metric: MeanAbs: 40,846.033195
+    # Metric: MeanSq: 4,173,891,592.33
+
+# Model: LinReg
+    # Metric: MedianAbs: 16,023.6214121
+    # Metric: MeanAbs: 21,910.0993854
+    # Metric: MeanSq: 1,193,264,065.64
