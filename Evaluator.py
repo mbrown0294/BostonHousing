@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.pyplot import plot
 from sklearn import svm
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
@@ -40,6 +40,22 @@ def grid_search(trainx, trainy):
     print(clf.best_score_)  # 0.657469669426
 
 
+def comp_score_plot(trainx, trainy, valx, valy):
+    components = []
+    scores = []
+    for comp in range(1, 80):
+        components.append(comp)
+        mini_pca = PCA(n_components=comp, whiten=True)
+        trainx_pca = mini_pca.fit_transform(trainx)  # Shape: (978, 5)
+        trainy = np.squeeze(trainy)
+        model.fit(trainx_pca, trainy)
+        new_valx = mini_pca.transform(valx)  # Shape: (482, 5)
+        valy_pred = model.predict(new_valx)
+        valy = valy.reshape(valy.shape[:1])
+        scores.append(metric(valy, valy_pred))
+    return components, scores
+
+
 if __name__ == "__main__":
     housing_train = pd.read_csv("featurizedTrain.csv")
     housing_test = pd.read_csv("featurizedTest.csv")
@@ -62,19 +78,26 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(
        X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 79)    # y_train.shape = (978, 1)
 #     grid_search(X_train, y_train)
+    component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
+    plt.plot(component_list, score_list)
+    plt.title('Score per # of Principal Components')
+    plt.xlabel('Valid Scores')
+    plt.ylabel('Number of Principal Components')
+    plt.show()
     pca = PCA(n_components=40, whiten=True)
     X_train_pca = pca.fit_transform(X_train)    # Shape: (978, 5)
+    y_train = np.squeeze(y_train)
     model.fit(X_train_pca, y_train)
     new_x_val = pca.transform(X_val)  # Shape: (482, 5)
     y_val_pred = model.predict(new_x_val)
     y_val = y_val.reshape(y_val.shape[:1])
     metric(y_val, y_val_pred)
     new_test_x = pca.transform(test_x)
-    price_pred = model.predict(new_test_x)
-    index = housing_test.index
-    pred_df = pd.DataFrame(index=index)
-    pred_df['SalePrice'] = price_pred
-    pred_df.to_csv("Submission.csv")
+    # price_pred = model.predict(new_test_x)
+    # index = housing_test.index
+    # pred_df = pd.DataFrame(index=index)
+    # pred_df['SalePrice'] = price_pred
+    # pred_df.to_csv("Submission.csv")
 
 
 # EXTRAS #
