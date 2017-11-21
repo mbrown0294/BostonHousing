@@ -7,8 +7,6 @@ from sklearn.metrics import mean_squared_error, make_scorer , mean_absolute_erro
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split, GridSearchCV
 
-# from sklearn.feature_selection import SelectKBest
-
 
 # Trains the data with a SelectKBest model
 def train(selector, mod, train_x, train_y, x_test):
@@ -37,7 +35,7 @@ def grid_search(trainx, trainy):
     clf = GridSearchCV(estimator=svm.SVR(), param_grid=parameter_candidates, n_jobs=-1)
     trainy = np.squeeze(trainy)
     clf.fit(trainx, trainy)
-    print(clf.best_score_)
+    print(clf.best_score_)  # 0.657469669426
 
 
 if __name__ == "__main__":
@@ -87,36 +85,38 @@ if __name__ == "__main__":
     #         print(i, ", ", pred_df.get_value(i, 0, takeable=True))
 
 
-# TESTING #
+'''
+TESTING
 
-# Model: RandomForest
-    # Metric: MedianAbs: 11,549.0 - 11,189.2 - 11,876.35
-    # Metric: MeanAbs: 19,100.3680498
-    # Metric: MeanSq: 982,556,345.949 - 1,358,389,203.78
-    # Metric: ExplVar: 0.841691548145
-    # Metric: MeanSqLog: 0.021788982229 - 0.0235023178184 <---- WINNER
-    # Metric: R2: 0.838998381662
+Model: RandomForest
+    Metric: MedianAbs: 11,549.0 - 11,189.2 - 11,876.35
+    Metric: MeanAbs: 19,100.3680498
+    Metric: MeanSq: 982,556,345.949 - 1,358,389,203.78
+    Metric: ExplVar: 0.841691548145
+    Metric: MeanSqLog: 0.021788982229 - 0.0235023178184 <---- WINNER
+    Metric: R2: 0.838998381662
 
-# Model: Lasso
-    # Metric: MedianAbs: 16,029.5013744
-    # Metric: MeanAbs: 21,906.9826906
-    # Metric: MeanSq: 1,192,649,897.97
-    # Metric: ExplVar: 0.838225609045
-    # Metric: MeanSqLog: ERROR
-    # Metric: R2: 0.837544432739
+Model: Lasso
+    Metric: MedianAbs: 16,029.5013744
+    Metric: MeanAbs: 21,906.9826906
+    Metric: MeanSq: 1,192,649,897.97
+    Metric: ExplVar: 0.838225609045
+    Metric: MeanSqLog: ERROR
+    Metric: R2: 0.837544432739
 
-# Model: LogReg
-    # Metric: MedianAbs: 26,250.0
-    # Metric: MeanAbs: 40,846.033195
-    # Metric: MeanSq: 4,173,891,592.33
-    # Metric: ExplVar: 0.43569662705
-    # Metric: MeanSqLog: 0.0959748166812
-    # Metric: R2: 0.431457691422
+Model: LogReg
+    Metric: MedianAbs: 26,250.0
+    Metric: MeanAbs: 40,846.033195
+    Metric: MeanSq: 4,173,891,592.33
+    Metric: ExplVar: 0.43569662705
+    Metric: MeanSqLog: 0.0959748166812
+    Metric: R2: 0.431457691422
 
-# Model: LinReg
-    # Metric: MedianAbs: 16,023.6214121
-    # Metric: MeanAbs: 21,910.0993854
-    # Metric: MeanSq: 1,193,264,065.64
-    # Metric: ExplVar: 0.83814249713
-    # Metric: MeanSqLog: ERROR
-    # Metric: R2: 0.837460774527
+Model: LinReg
+    Metric: MedianAbs: 16,023.6214121
+    Metric: MeanAbs: 21,910.0993854
+    Metric: MeanSq: 1,193,264,065.64
+    Metric: ExplVar: 0.83814249713
+    Metric: MeanSqLog: ERROR
+    Metric: R2: 0.837460774527
+'''
