@@ -57,51 +57,71 @@ def comp_score_plot(trainx, trainy, valx, valy):
 
 
 if __name__ == "__main__":
-    housing_train = pd.read_csv("featurizedTrain.csv")
-    housing_test = pd.read_csv("featurizedTest.csv")
+    # Let's get started
+    housing_train = pd.read_csv("featurized_train.csv")
+    housing_test = pd.read_csv("featurized_test.csv")
     housing_test.set_index('Id', drop=True, inplace=True)  # Maintains 'Id' values
-# Set metric
-    # metric = mean_squared_error
-    # metric = median_absolute_error
+    for column in housing_train.columns:
+        if column not in housing_test.columns:
+            housing_train.drop(column, 1, inplace=True)
+    # print(housing_test.shape)
+    # print(housing_train.shape)
     metric = mean_squared_log_error
-    # metric = r2_score
-    # metric = explained_variance_score
-# Set model
     model = RandomForestRegressor()
-    # model = Lasso()
-# Setting data variables
+
+    # Setting data variables
     X = housing_train.values  # Shape: (1460, 79)
     y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
     test_x = housing_test.values  # Shape: (1459, 79)
-    y_col = pd.read_csv("train_prices.csv")
-# train_test_split validation
+    # y_col = pd.read_csv("train_prices.csv")
+
+    # train_test_split validation
     X_train, X_val, y_train, y_val = train_test_split(
        X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 79)    # y_train.shape = (978, 1)
-#     grid_search(X_train, y_train)
-    component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
-    plt.plot(component_list, score_list)
-    plt.title('Score per # of Principal Components')
-    plt.xlabel('Valid Scores')
-    plt.ylabel('Number of Principal Components')
-    plt.show()
-    pca = PCA(n_components=40, whiten=True)
-    X_train_pca = pca.fit_transform(X_train)    # Shape: (978, 5)
-    y_train = np.squeeze(y_train)
+
+    #     grid_search(X_train, y_train)
+
+    # # Create and Print MatPlot of component cost scores at each n_components value
+    # component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
+    # plt.plot(component_list, score_list)
+    # plt.title('Score per # of Principal Components')
+    # plt.ylabel('Valid Scores')
+    # plt.xlabel('Number of Principal Components')
+    # plt.show()
+
+    # Starts the evaluation
+    pca = PCA(n_components=28, whiten=True)
+    X_train_pca = pca.fit_transform(X_train)    # Shape: (978, n_components)
+    y_train = np.squeeze(y_train)  # Shape: (978,)
+    # Fit the model and transform
     model.fit(X_train_pca, y_train)
-    new_x_val = pca.transform(X_val)  # Shape: (482, 5)
-    y_val_pred = model.predict(new_x_val)
-    y_val = y_val.reshape(y_val.shape[:1])
-    metric(y_val, y_val_pred)
+    new_x_val = pca.transform(X_val)  # Shape: (482, n_components)
+    y_val_pred = model.predict(new_x_val)  # Shape: (482,)
+    y_val = y_val.reshape(y_val.shape[:1]) # Shape: (482,)
+    print(metric(y_val, y_val_pred))
+
+    X_pca = pca.fit_transform(X)
+    y = np.squeeze(y)
+    model.fit(X_pca, y)
     new_test_x = pca.transform(test_x)
-    # price_pred = model.predict(new_test_x)
-    # index = housing_test.index
-    # pred_df = pd.DataFrame(index=index)
-    # pred_df['SalePrice'] = price_pred
-    # pred_df.to_csv("Submission.csv")
+
+    price_pred = model.predict(new_test_x)
+    index = housing_test.index
+    pred_df = pd.DataFrame(index=index)
+    pred_df['SalePrice'] = price_pred
+    pred_df.to_csv("Submission.csv")
 
 
 # EXTRAS #
 
+# Other models
+    # model = Lasso()
+
+# Other metrics
+    # metric = mean_squared_error
+    # metric = median_absolute_error
+    # metric = r2_score
+    # metric = explained_variance_score
 
 # Returns all negatives predicted (and their indices):
     # for i in range(len(pred_df.SalePrice)):
