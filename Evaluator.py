@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import time
+from datetime import datetime
 from sklearn import svm
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
@@ -10,7 +12,7 @@ from sklearn.metrics import mean_squared_error, make_scorer , mean_absolute_erro
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 
-def grid_search(trainx, trainy):
+def grid_search(trainx, trainy, valx, valy):
     parameter_candidates = [
         {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
         {'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']}
@@ -18,7 +20,16 @@ def grid_search(trainx, trainy):
     clf = GridSearchCV(estimator=svm.SVR(), param_grid=parameter_candidates, n_jobs=-1)
     trainy = np.squeeze(trainy)
     clf.fit(trainx, trainy)
-    print(clf.best_score_)  # 0.657469669426
+    b_score = clf.best_score_
+    b_c = clf.best_estimator_.C
+    b_kernel = clf.best_estimator_.kernel
+    b_gamma = clf.best_estimator_.gamma
+    # print('Best score: ', b_score)
+    # print('\nC=', b_c)
+    # print('\nkernel="', b_kernel, '"')
+    # print('\ngamma=', b_gamma)
+    print('Val Score: ', clf.score(valx, valy), "\n")
+    return b_c, b_kernel, b_gamma, b_score
 
 
 def comp_score_plot(trainx, trainy, valx, valy):
@@ -38,6 +49,8 @@ def comp_score_plot(trainx, trainy, valx, valy):
 
 
 if __name__ == "__main__":
+    time_start = datetime.now()
+    print(str(time_start), "\n")
     # Let's get started
     housing_train = pd.read_csv("featurized_train.csv")
     housing_test = pd.read_csv("featurized_test.csv")
@@ -59,18 +72,35 @@ if __name__ == "__main__":
     # train_test_split validation
     X_train, X_val, y_train, y_val = train_test_split(
        X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 79)    # y_train.shape = (978, 1)
+    quick_X = X[:50]
+    quick_y = y[:50]
+    quick_xval = X[-50:]
+    quick_yval = y[-50:]
 
-    # grid_search(X_train, y_train)
 
-    # # Create and Print MatPlot of component cost scores at each n_components value
-    # component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
-    # plt.plot(component_list, score_list)
-    # plt.title('Score per # of Principal Components')
-    # plt.ylabel('Valid Scores')
-    # plt.xlabel('Number of Principal Components')
-    # plt.show()
 
-    # Starts the evaluation
+    # best_c, best_kernel, best_gamma,  best_score = grid_search(quick_X, quick_y,
+    #                                                            quick_xval, quick_yval)
+    # print("X_train: ", X_train.shape, "\ny_train: ", y_train.shape, "\nX_val: ",
+    #       X_val.shape, "\ny_val: ", y_val.shape)
+    # best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)
+    #
+    # sv_r = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
+    # sv_r.fit(quick_X, quick_y)
+    # print("SVR Score: ", sv_r.score(quick_xval, quick_yval))
+    #
+    # sv_r.fit(X_train, y_train)
+    # print("SVR Score: ", sv_r.score(X_val, y_val))
+
+# Create and Print MatPlot of component cost scores at each n_components value
+    component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
+    plt.plot(component_list, score_list)
+    plt.title('Score per # of Principal Components')
+    plt.ylabel('Valid Scores')
+    plt.xlabel('Number of Principal Components')
+    plt.show()
+
+# Starts the evaluation
     pca = PCA(n_components=31, whiten=True)
     X_train_pca = pca.fit_transform(X_train)    # Shape: (978, n_components)
     y_train = np.squeeze(y_train)  # Shape: (978,)
@@ -79,7 +109,14 @@ if __name__ == "__main__":
     new_x_val = pca.transform(X_val)  # Shape: (482, n_components)
     y_val_pred = model.predict(new_x_val)  # Shape: (482,)
     y_val = y_val.reshape(y_val.shape[:1])  # Shape: (482,)
-    print(metric(y_val, y_val_pred))
+    print("Pred: \n", y_val_pred, "\nGround Truth: \n", y_val)
+    # quick_pred = y_val_pred.values
+    # quick_truth = y_val.values
+    quick_pred_df = pd.DataFrame({'Price': y_val_pred})
+    quick_pred_df.to_csv('Quick_Pred.csv')
+    quick_truth_df = pd.DataFrame({'Price': y_val})
+    quick_truth_df.to_csv('Quick_Truth.csv')
+    # print(metric(y_val, y_val_pred))
 
     X_pca = pca.fit_transform(X)
     y = np.squeeze(y)
@@ -91,6 +128,17 @@ if __name__ == "__main__":
     pred_df = pd.DataFrame(index=index)
     pred_df['SalePrice'] = price_pred
     pred_df.to_csv("Submission.csv")
+    time_done = datetime.now()
+    print("\n", str(time_done), "\n")
+    elapsed = time_done - time_start
+    day_tup = divmod(elapsed.total_seconds(), 86400)
+    days = day_tup[0]
+    hour_tup = divmod(day_tup[1], 3600)
+    hours = hour_tup[0]
+    min_tup = divmod(hour_tup[1], 60)
+    minutes = min_tup[0]
+    seconds = min_tup[1]
+    print("Days: ", days, "\nHours: ", hours, "\nMinutes: ", minutes, "\nSeconds: ", seconds)
 
 # Other models
     # model = Lasso()
