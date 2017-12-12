@@ -24,10 +24,10 @@ def grid_search(trainx, trainy, valx, valy):
     b_c = clf.best_estimator_.C
     b_kernel = clf.best_estimator_.kernel
     b_gamma = clf.best_estimator_.gamma
-    # print('Best score: ', b_score)
-    # print('\nC=', b_c)
-    # print('\nkernel="', b_kernel, '"')
-    # print('\ngamma=', b_gamma)
+    print('Best score: ', b_score)
+    print('\nC=', b_c)
+    print('\nkernel="', b_kernel, '"')
+    print('\ngamma=', b_gamma)
     print('Val Score: ', clf.score(valx, valy), "\n")
     return b_c, b_kernel, b_gamma, b_score
 
@@ -60,6 +60,7 @@ if __name__ == "__main__":
             housing_train.drop(column, 1, inplace=True)
     # print(housing_test.shape)  # Test Shape: (1459, 195)
     # print(housing_train.shape)  # Train Shape: (1460, 195)
+
     metric = mean_squared_log_error
     model = RandomForestRegressor()
 
@@ -67,7 +68,6 @@ if __name__ == "__main__":
     X = housing_train.values  # Shape: (1460, 79)
     y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
     test_x = housing_test.values  # Shape: (1459, 79)
-    # y_col = pd.read_csv("train_prices.csv")
 
     # train_test_split validation
     X_train, X_val, y_train, y_val = train_test_split(
@@ -77,21 +77,18 @@ if __name__ == "__main__":
     quick_xval = X[-50:]
     quick_yval = y[-50:]
 
+# Grid Search
+    # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)
+    best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)
 
+    svr = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
 
-    # best_c, best_kernel, best_gamma,  best_score = grid_search(quick_X, quick_y,
-    #                                                            quick_xval, quick_yval)
-    # print("X_train: ", X_train.shape, "\ny_train: ", y_train.shape, "\nX_val: ",
-    #       X_val.shape, "\ny_val: ", y_val.shape)
-    # best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)
-    #
-    # sv_r = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
-    # sv_r.fit(quick_X, quick_y)
-    # print("SVR Score: ", sv_r.score(quick_xval, quick_yval))
-    #
-    # sv_r.fit(X_train, y_train)
-    # print("SVR Score: ", sv_r.score(X_val, y_val))
+    svr.fit(X_train, y_train)
+    # svr.fit(quick_X, quick_y)
+    print("SVR Score: ", svr.score(X_val, y_val))
+    # print("SVR Score: ", svr.score(quick_xval, quick_yval))
 
+    ''' 
 # Create and Print MatPlot of component cost scores at each n_components value
     component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
     plt.plot(component_list, score_list)
@@ -99,6 +96,7 @@ if __name__ == "__main__":
     plt.ylabel('Valid Scores')
     plt.xlabel('Number of Principal Components')
     plt.show()
+    '''
 
 # Starts the evaluation
     pca = PCA(n_components=31, whiten=True)
