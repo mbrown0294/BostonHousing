@@ -7,19 +7,19 @@ def encode(train_df, test_df, enc):
     # Creates subset of DataFrames with only object columns
     train_obj = train_df.select_dtypes(include=['object'])
     test_obj = test_df.select_dtypes(include=['object'])
-
     col_names = train_obj.columns
 
+    '''
     # Sums up the nulls in each column
     train_nulls = train_obj.isnull().sum()
     test_nulls = test_obj.isnull().sum()
+    '''
 
     # Creates and transposes matrices to represent DataFrames
     train = train_obj.values
     train = np.matrix.transpose(train)
     test = test_obj.values
     test = np.matrix.transpose(test)
-
     # LabelEncodes both matrices
     for x in range(len(train)):
         # print(np.unique(train[x].astype(str), return_counts=True))  # Essentially value_counts for an array
@@ -67,6 +67,7 @@ if __name__ == '__main__':
     if 'Id' in train_dataframe.columns:
         train_dataframe.set_index('Id', drop=True, inplace=True)
     index_train = train_dataframe.index
+
     # Now Test
     test_dataframe = pd.read_csv("cleanTest.csv")
     if 'Id' in test_dataframe.columns:
