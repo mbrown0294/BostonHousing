@@ -48,6 +48,24 @@ def comp_score_plot(trainx, trainy, valx, valy):
     return components, scores
 
 
+def time_elapsed(start, end):
+    elapsed = end - start
+    day_tup = divmod(elapsed.total_seconds(), 86400)
+    days = day_tup[0]
+    hour_tup = divmod(day_tup[1], 3600)
+    hours = hour_tup[0]
+    min_tup = divmod(hour_tup[1], 60)
+    minutes = min_tup[0]
+    seconds = min_tup[1]
+    if days > 0:
+        print("\nDays: ", days)
+    if hours > 0:
+        print("Hours: ", hours)
+    if minutes > 0:
+        print("Minutes: ", minutes)
+    print("Seconds: ", seconds)
+
+
 if __name__ == "__main__":
     time_start = datetime.now()
     print(str(time_start), "\n")
@@ -108,8 +126,6 @@ if __name__ == "__main__":
     y_val_pred = model.predict(new_x_val)  # Shape: (482,)
     y_val = y_val.reshape(y_val.shape[:1])  # Shape: (482,)
     print("Pred: \n", y_val_pred, "\nGround Truth: \n", y_val)
-    # quick_pred = y_val_pred.values
-    # quick_truth = y_val.values
     quick_pred_df = pd.DataFrame({'Price': y_val_pred})
     quick_pred_df.to_csv('Quick_Pred.csv')
     quick_truth_df = pd.DataFrame({'Price': y_val})
@@ -126,22 +142,7 @@ if __name__ == "__main__":
     pred_df = pd.DataFrame(index=index)
     pred_df['SalePrice'] = price_pred
     pred_df.to_csv("Submission.csv")
+
     time_done = datetime.now()
     print("\n", str(time_done), "\n")
-    elapsed = time_done - time_start
-    day_tup = divmod(elapsed.total_seconds(), 86400)
-    days = day_tup[0]
-    hour_tup = divmod(day_tup[1], 3600)
-    hours = hour_tup[0]
-    min_tup = divmod(hour_tup[1], 60)
-    minutes = min_tup[0]
-    seconds = min_tup[1]
-    print("Days: ", days, "\nHours: ", hours, "\nMinutes: ", minutes, "\nSeconds: ", seconds)
-
-# Other models
-    # model = Lasso()
-
-# Returns all negatives predicted (and their indices):
-    # for i in range(len(pred_df.SalePrice)):
-    #     if pred_df.get_value(i, 0, takeable=True) < 0:
-    #         print(i, ", ", pred_df.get_value(i, 0, takeable=True))
+    time_elapsed(time_start, time_done)
