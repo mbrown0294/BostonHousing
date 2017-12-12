@@ -13,7 +13,6 @@ def encode(train_df, test_df, enc):
     # Sums up the nulls in each column
     train_nulls = train_obj.isnull().sum()
     test_nulls = test_obj.isnull().sum()
-    # print(train_nulls, '\n\nDone\n\n', test_nulls)
 
     # Creates and transposes matrices to represent DataFrames
     train = train_obj.values
@@ -34,12 +33,10 @@ def encode(train_df, test_df, enc):
 def re_dataframe(train_mat, test_mat):
     train_mat = np.matrix.transpose(train_mat)
     test_mat = np.matrix.transpose(test_mat)
-    new_train_df = pd.DataFrame(train_mat)
-    new_test_df = pd.DataFrame(test_mat)
+    new_train_df = pd.DataFrame(train_mat, index=index_train)
+    new_test_df = pd.DataFrame(test_mat, index=index_test)
     new_train_df.columns = columns
     new_test_df.columns = columns
-    new_test_df.set_index(index_test, inplace=True)
-    # print(new_train_df, '\n\n\nHI\n\n\n', new_test_df)
     return new_train_df, new_test_df
 
 
@@ -47,7 +44,6 @@ def re_dataframe(train_mat, test_mat):
 def one_hot(train_df, test_df):
     dummy_train = pd.get_dummies(train_df, drop_first=True)
     dummy_test = pd.get_dummies(test_df, drop_first=True)
-    # print(dummy_train, '\n\n\nNEW\n\n\n', dummy_test)
     return dummy_train, dummy_test
 
 
@@ -56,12 +52,10 @@ def rejoin(full_train, full_test, train_dum, test_dum):
     # Drops object columns
     full_train.drop(full_train.select_dtypes(include=['object']), 1, inplace=True)
     full_test.drop(full_test.select_dtypes(include=['object']), 1, inplace=True)
-    # print(full_train, '\n\n\n\nHI\n\n\n\n', full_test)
 
     # Joins with numeric
     full_train = full_train.join(train_dum)
     full_test = full_test.join(test_dum)
-    # print('\n\n\n\n\n\n\nAHHHHHHHHHHHHHHHHHHHHHHHHHH\n\n\n\n\n\n\n', full_train, '\n\n\n\nHI\n\n\n\n', full_test)
     return full_train, full_test
 
 
@@ -78,7 +72,6 @@ if __name__ == '__main__':
     if 'Id' in test_dataframe.columns:
         test_dataframe.set_index('Id', drop=True, inplace=True)
     index_test = test_dataframe.index
-    # print(index_train, '\n', index_test)
 
     # Drops columns with additional categories in Test
     train_dataframe.drop(['MSZoning', 'Utilities', 'Exterior1st', 'Exterior2nd', 'KitchenQual', 'Functional',
@@ -90,9 +83,9 @@ if __name__ == '__main__':
     encoded_train, encoded_test, columns = encode(train_dataframe, test_dataframe, encoder)
     new_train, new_test = re_dataframe(encoded_train, encoded_test)
     train_dummy, test_dummy = one_hot(new_train, new_test)
+    mini_dummy = train_dummy[['LotConfig_1', 'LotConfig_2', 'LotConfig_3', 'LotConfig_4']]
     train_dataframe, test_dataframe = rejoin(train_dataframe, test_dataframe, train_dummy, test_dummy)
-    # print(train_dataframe, '\n\n\n\n\n\n\n\n\n\n\n\n\n', test_dataframe)
 
     # Done
-    train_dataframe.to_csv('featurized_train.csv', index=False)
+    train_dataframe.to_csv('featurized_train.csv', index=True)
     test_dataframe.to_csv('featurized_test.csv', index=True)
