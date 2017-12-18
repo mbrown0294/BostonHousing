@@ -25,9 +25,9 @@ def grid_search(trainx, trainy, valx, valy):
     b_kernel = clf.best_estimator_.kernel
     b_gamma = clf.best_estimator_.gamma
     print('Best score: ', b_score)
-    print('\nC=', b_c)
-    print('\nkernel="', b_kernel, '"')
-    print('\ngamma=', b_gamma)
+    print('C=', b_c)
+    print('kernel="', b_kernel, '"')
+    print('gamma=', b_gamma)
     print('Val Score: ', clf.score(valx, valy), "\n")
     return b_c, b_kernel, b_gamma, b_score
 
@@ -45,7 +45,11 @@ def comp_score_plot(trainx, trainy, valx, valy):
         valy_pred = model.predict(new_valx)
         valy = valy.reshape(valy.shape[:1])
         scores.append(metric(valy, valy_pred))
-    return components, scores
+        plt.plot(components, scores)
+        plt.title('Score per # of Principal Components')
+        plt.ylabel('Valid Scores')
+        plt.xlabel('Number of Principal Components')
+        plt.show()
 
 
 def time_elapsed(start, end):
@@ -85,47 +89,69 @@ if __name__ == "__main__":
     # Setting data variables
     X = housing_train.values  # Shape: (1460, 79)
     y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
-    test_x = housing_test.values  # Shape: (1459, 79)
+    X_test = housing_test.values  # Shape: (1459, 79)
 
     # train_test_split validation
     X_train, X_val, y_train, y_val = train_test_split(
-       X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 79)    # y_train.shape = (978, 1)
-    quick_X = X[:50]
-    quick_y = y[:50]
-    quick_xval = X[-50:]
-    quick_yval = y[-50:]
+       X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 195) / X_val.shape = (482, 195)
+    y_train = np.squeeze(y_train)  # Shape: (978,)
+    y_val = np.squeeze(y_val)  # Shape: (482,)
+    quick_X = X[:300]
+    quick_y = y[:300]
+    quick_xval = X[-300:]
+    quick_yval = y[-300:]
 
-# Grid Search
-    # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)
-    best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)
+    # # Grid Search
+    # Sample Size/Time Run:
+    #     50/1 min, 35.570 sec
+    #     100/6 min, 32.175 sec # Up about 5
+    #     150/12 min, 38.260 sec # By 6? Maybe linear?
+    #     300/ Eh, I gave up. Just run the full train?
 
-    svr = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
+    # # On to grid searching
+    # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)  # Quick(-ish)
+    best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)  # Train (slow)
 
-    svr.fit(X_train, y_train)
-    # svr.fit(quick_X, quick_y)
-    print("SVR Score: ", svr.score(X_val, y_val))
-    # print("SVR Score: ", svr.score(quick_xval, quick_yval))
-
-    ''' 
-# Create and Print MatPlot of component cost scores at each n_components value
-    component_list, score_list = comp_score_plot(X_train, y_train, X_val, y_val)
-    plt.plot(component_list, score_list)
-    plt.title('Score per # of Principal Components')
-    plt.ylabel('Valid Scores')
-    plt.xlabel('Number of Principal Components')
-    plt.show()
+    '''
+    Size 50: C=1/kernel='linear'/gamma='auto'/Best Score: 0.696984862476
+    Size 100: C=1/kernel='linear'/gamma='auto'/Best Score: 0.645307692251
+    Size 150: C=100/kernel='linear'/gamma='auto'/Best Score: 0.762856090685
     '''
 
-# Starts the evaluation
+    # svr = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
+
+    # # svr.fit(quick_X, quick_y)
+    # # # print("SVR Score: ", svr.score(quick_xval, quick_yval))
+    # svr.fit(X_train, y_train)
+    # # print("SVR Score: ", svr.score(X_val, y_val))
+
+    # # Line graph for n_components and scores
+    # comp_score_plot(X_train, y_train, X_val, y_val)
+
+# # # # FILLER COMMENT FOR REMOVED CODE # # #
+
+    # # Finishing Code??
+    # svr.fit(X, y)
+    # prediction = svr.predict(X_test)
+    # index = housing_test.index
+    # pred_df = pd.DataFrame(index=index)
+    # pred_df['SalePrice'] = prediction
+    # # pred_df.to_csv("Submission.csv")
+    # print(pred_df)
+
+    time_done = datetime.now()
+    print("\n", str(time_done), "\n")
+    time_elapsed(time_start, time_done)
+
+    '''
     pca = PCA(n_components=31, whiten=True)
     X_train_pca = pca.fit_transform(X_train)    # Shape: (978, n_components)
-    y_train = np.squeeze(y_train)  # Shape: (978,)
-    # Fit the model and transform
     model.fit(X_train_pca, y_train)
     new_x_val = pca.transform(X_val)  # Shape: (482, n_components)
     y_val_pred = model.predict(new_x_val)  # Shape: (482,)
+
     y_val = y_val.reshape(y_val.shape[:1])  # Shape: (482,)
-    print("Pred: \n", y_val_pred, "\nGround Truth: \n", y_val)
+    # print("Pred: \n", y_val_pred, "\nGround Truth: \n", y_val)
     quick_pred_df = pd.DataFrame({'Price': y_val_pred})
     quick_pred_df.to_csv('Quick_Pred.csv')
     quick_truth_df = pd.DataFrame({'Price': y_val})
@@ -136,13 +162,4 @@ if __name__ == "__main__":
     y = np.squeeze(y)
     model.fit(X_pca, y)
     new_test_x = pca.transform(test_x)
-
-    price_pred = model.predict(new_test_x)
-    index = housing_test.index
-    pred_df = pd.DataFrame(index=index)
-    pred_df['SalePrice'] = price_pred
-    pred_df.to_csv("Submission.csv")
-
-    time_done = datetime.now()
-    print("\n", str(time_done), "\n")
-    time_elapsed(time_start, time_done)
+    '''
