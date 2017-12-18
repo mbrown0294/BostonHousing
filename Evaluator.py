@@ -72,10 +72,10 @@ if __name__ == "__main__":
     time_start = datetime.now()
     print(str(time_start), "\n")
 
-# Begin evaluation
     housing_train = pd.read_csv("featurized_train.csv")  # Train Shape: (1460, 195)
     housing_test = pd.read_csv("featurized_test.csv")  # Test Shape: (1459, 195)
     housing_test.set_index('Id', drop=True, inplace=True)
+    index = housing_test.index  # [1461, 2919]
 
     # Removes columns found in train but not test
     for column in housing_train.columns:
@@ -85,37 +85,28 @@ if __name__ == "__main__":
     metric = mean_squared_log_error
     model = RandomForestRegressor()
     X = housing_train.values  # Shape: (1460, 195)
-    y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
+    y = pd.read_csv("train_prices.csv").values  # Shape: (1460,)
+    y = np.squeeze(y)
     X_test = housing_test.values  # Shape: (1459, 195)
 
-    X_train, X_val, y_train, y_val = train_test_split(
-       X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 195) / X_val.shape = (482, 195)
-    y_train = np.squeeze(y_train)  # Shape: (978,)
-    y_val = np.squeeze(y_val)  # Shape: (482,)
-    quick_X = X[:300]
-    quick_y = y[:300]
-    quick_xval = X[-300:]
-    quick_yval = y[-300:]
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.33, random_state=42)
+    y_train = np.squeeze(y_train)
+    y_val = np.squeeze(y_val)
+    # X_train.shape = (978, 195) / X_val.shape = (482, 195) / y_train.shape = (978,) / y_val.shape = (482,)
 
-    # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)  # Quick(-ish)
-    best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)  # Train (slow)
-
+    # quick_X, quick_y, quick_xval, quick_yval = X[:150], y[:150], X[-150:], y[-150:]
+    # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)
+    best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)
     svr = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
+    svr.fit(X_train, y_train)  # svr.fit(quick_X, quick_y)
+    print("SVR Score: ", svr.score(X_val, y_val))  # print("SVR Score: ", svr.score(quick_xval, quick_yval))
 
-    # # svr.fit(quick_X, quick_y)
-    # # # print("SVR Score: ", svr.score(quick_xval, quick_yval))
-    svr.fit(X_train, y_train)
-    print("SVR Score: ", svr.score(X_val, y_val))
+# # # # FILLER COMMENT FOR MOVED CODE # # #
 
-    # # Line graph for n_components and scores
     # comp_score_plot(X_train, y_train, X_val, y_val)
 
-# # # # FILLER COMMENT FOR REMOVED CODE # # #
-
-    # # Finishing Code??
     # svr.fit(X, y)
     # prediction = svr.predict(X_test)
-    # index = housing_test.index
     # pred_df = pd.DataFrame(index=index)
     # pred_df['SalePrice'] = prediction
     # # pred_df.to_csv("Submission.csv")
