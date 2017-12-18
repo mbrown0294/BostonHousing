@@ -87,6 +87,5 @@ if __name__ == '__main__':
     mini_dummy = train_dummy[['LotConfig_1', 'LotConfig_2', 'LotConfig_3', 'LotConfig_4']]
     train_dataframe, test_dataframe = rejoin(train_dataframe, test_dataframe, train_dummy, test_dummy)
 
-    # Done
     train_dataframe.to_csv('featurized_train.csv', index=True)
     test_dataframe.to_csv('featurized_test.csv', index=True)

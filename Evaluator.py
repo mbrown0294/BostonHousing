@@ -121,8 +121,6 @@ if __name__ == "__main__":
     # y = np.squeeze(y)
     # model.fit(X_pca, y)
     # new_test_x = pca.transform(X_test)
-    
-    # # # END MOVED CODE # # #
     '''
 
 #    comp_score_plot(X_train, y_train, X_val, y_val)
