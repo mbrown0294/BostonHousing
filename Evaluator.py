@@ -68,27 +68,26 @@ def time_elapsed(start, end):
 
 
 if __name__ == "__main__":
+    # Time tracker
     time_start = datetime.now()
     print(str(time_start), "\n")
-    # Let's get started
-    housing_train = pd.read_csv("featurized_train.csv")
-    housing_test = pd.read_csv("featurized_test.csv")
-    housing_test.set_index('Id', drop=True, inplace=True)  # Maintains 'Id' values
+
+# Begin evaluation
+    housing_train = pd.read_csv("featurized_train.csv")  # Train Shape: (1460, 195)
+    housing_test = pd.read_csv("featurized_test.csv")  # Test Shape: (1459, 195)
+    housing_test.set_index('Id', drop=True, inplace=True)
+
+    # Removes columns found in train but not test
     for column in housing_train.columns:
         if column not in housing_test.columns:
             housing_train.drop(column, 1, inplace=True)
-    # print(housing_test.shape)  # Test Shape: (1459, 195)
-    # print(housing_train.shape)  # Train Shape: (1460, 195)
 
     metric = mean_squared_log_error
     model = RandomForestRegressor()
-
-    # Setting data variables
-    X = housing_train.values  # Shape: (1460, 79)
+    X = housing_train.values  # Shape: (1460, 195)
     y = pd.read_csv("train_prices.csv").values  # Shape: (1460, 1)
-    X_test = housing_test.values  # Shape: (1459, 79)
+    X_test = housing_test.values  # Shape: (1459, 195)
 
-    # train_test_split validation
     X_train, X_val, y_train, y_val = train_test_split(
        X, y, test_size=0.33, random_state=42)    # X_train.shape = (978, 195) / X_val.shape = (482, 195)
     y_train = np.squeeze(y_train)  # Shape: (978,)
@@ -98,22 +97,8 @@ if __name__ == "__main__":
     quick_xval = X[-300:]
     quick_yval = y[-300:]
 
-    # # Grid Search
-    # Sample Size/Time Run:
-    #     50/1 min, 35.570 sec
-    #     100/6 min, 32.175 sec # Up about 5
-    #     150/12 min, 38.260 sec # By 6? Maybe linear?
-    #     300/ Eh, I gave up. Just run the full train?
-
-    # # On to grid searching
     # best_c, best_kernel, best_gamma, best_score = grid_search(quick_X, quick_y, quick_xval, quick_yval)  # Quick(-ish)
     best_c, best_kernel, best_gamma,  best_score = grid_search(X_train, y_train, X_val, y_val)  # Train (slow)
-
-    '''
-    Size 50: C=1/kernel='linear'/gamma='auto'/Best Score: 0.696984862476
-    Size 100: C=1/kernel='linear'/gamma='auto'/Best Score: 0.645307692251
-    Size 150: C=100/kernel='linear'/gamma='auto'/Best Score: 0.762856090685
-    '''
 
     svr = svm.SVR(C=best_c, kernel=best_kernel, gamma=best_gamma)
 
@@ -139,6 +124,20 @@ if __name__ == "__main__":
     time_done = datetime.now()
     print("\n", str(time_done), "\n")
     time_elapsed(time_start, time_done)
+
+# # # Test Results # # #
+
+    # # Quick Set
+    # Size 50: C=1/kernel='linear'/gamma='auto'/Best Score: 0.696984862476
+    # Size 100: C=1/kernel='linear'/gamma='auto'/Best Score: 0.645307692251
+    # Size 150: C=100/kernel='linear'/gamma='auto'/Best Score: 0.762856090685
+
+    # # Grid Search (Sample Size/Time Run)
+    #     50  / 1 min, 35.570 sec
+    #     100 / 6 min, 32.175 sec # Up about 5
+    #     150 / 12 min, 38.260 sec # By 6? Maybe linear?
+
+# # # End Test Results # # #
 
     '''
     pca = PCA(n_components=41, whiten=True)
