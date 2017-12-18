@@ -101,35 +101,6 @@ if __name__ == "__main__":
     svr.fit(X_train, y_train)  # svr.fit(quick_X, quick_y)
     print("SVR Score: ", svr.score(X_val, y_val))  # print("SVR Score: ", svr.score(quick_xval, quick_yval))
 
-# # # # FILLER COMMENT FOR MOVED CODE # # #
-
-    # comp_score_plot(X_train, y_train, X_val, y_val)
-
-    # svr.fit(X, y)
-    # prediction = svr.predict(X_test)
-    # pred_df = pd.DataFrame(index=index)
-    # pred_df['SalePrice'] = prediction
-    # # pred_df.to_csv("Submission.csv")
-    # print(pred_df)
-
-    time_done = datetime.now()
-    print("\n", str(time_done), "\n")
-    time_elapsed(time_start, time_done)
-
-# # # Test Results # # #
-
-    # # Quick Set
-    # Size 50: C=1/kernel='linear'/gamma='auto'/Best Score: 0.696984862476
-    # Size 100: C=1/kernel='linear'/gamma='auto'/Best Score: 0.645307692251
-    # Size 150: C=100/kernel='linear'/gamma='auto'/Best Score: 0.762856090685
-
-    # # Grid Search (Sample Size/Time Run)
-    #     50  / 1 min, 35.570 sec
-    #     100 / 6 min, 32.175 sec # Up about 5
-    #     150 / 12 min, 38.260 sec # By 6? Maybe linear?
-
-# # # End Test Results # # #
-
     '''
     pca = PCA(n_components=41, whiten=True)
     X_train_pca = pca.fit_transform(X_train)    # Shape: (978, n_components)
@@ -151,5 +122,29 @@ if __name__ == "__main__":
     # model.fit(X_pca, y)
     # new_test_x = pca.transform(X_test)
     
-    # # # END FILLER CODE # # #
+    # # # END MOVED CODE # # #
     '''
+
+#    comp_score_plot(X_train, y_train, X_val, y_val)
+
+#    svr.fit(X, y)
+#    prediction = svr.predict(X_test)
+#    pred_df = pd.DataFrame(index=index)
+#    pred_df['SalePrice'] = prediction
+#    # pred_df.to_csv("Submission.csv")
+#    print(pred_df)
+
+    time_done = datetime.now()
+    print("\n", str(time_done), "\n")
+    time_elapsed(time_start, time_done)
+
+'''Test Results
+    Quick Set
+      Size 50: C=1/kernel='linear'/gamma='auto'/Best Score: 0.696984862476
+      Size 100: C=1/kernel='linear'/gamma='auto'/Best Score: 0.645307692251
+      Size 150: C=100/kernel='linear'/gamma='auto'/Best Score: 0.762856090685
+    Grid Search (Sample Size/Time Run)
+      50  / 1 min, 35.570 sec
+      100 / 6 min, 32.175 sec # Up about 5
+      150 / 12 min, 38.260 sec # By 6? Maybe linear?
+'''
