@@ -23,7 +23,6 @@ def encode(train_df, test_df, enc):
             test_vals[x] = enc.transform(test_vals[x].astype(str))
     return train_vals, test_vals, col_names
 
-# # # THERE'S A NAN IN MY CODE # # #
 
 # Turns matrices back into DataFrames and adds index for test
 def re_dataframe(train_mat, test_mat):
@@ -55,16 +54,25 @@ def rejoin(full_train, full_test, train_dum, test_dum):
     return full_train, full_test
 
 
+def scale_func(tr, te):
+    scaled_tr = scaler.fit_transform(tr)  # (1460, 36)
+    scaled_te = scaler.transform(te)  # (1459, 36)
+    scaled_tr_num = pd.DataFrame(scaled_tr, columns=num_columns, index=ind_train)
+    scaled_te_num = pd.DataFrame(scaled_te, columns=num_columns, index=ind_test)
+    return scaled_tr_num, scaled_te_num
+
+
 if __name__ == '__main__':
     encoder = LabelEncoder()
     scaler = MinMaxScaler()
+    scale = False
 
     # Creates DataFrames and preserves index
-    train = pd.read_csv("cleanTrain.csv")  # (1460, 72)
+    train = pd.read_csv("clean_train.csv")  # (1460, 72)
     if 'Id' in train.columns:
         train.set_index('Id', drop=True, inplace=True)
     ind_train = train.index  # (1, 1460)
-    test = pd.read_csv("cleanTest.csv")  # (1459, 72)
+    test = pd.read_csv("clean_test.csv")  # (1459, 72)
     if 'Id' in test.columns:
         test.set_index('Id', drop=True, inplace=True)
     ind_test = test.index
@@ -74,7 +82,7 @@ if __name__ == '__main__':
     train, test = train.drop(dropped, 1, inplace=False), test.drop(dropped, 1, inplace=False)
     # Variables
     X = train.values
-    y = pd.read_csv("train_prices.csv")
+    y = pd.read_csv("ground_truth.csv")
     y = np.squeeze(y.values)
     columns = train.columns
 
@@ -86,13 +94,10 @@ if __name__ == '__main__':
     num_columns = num_train.columns
     obj_columns = obj_train.columns
 
-    # Start scaling (to between 1 and 0) <------ No NaNs
-    scaled_train = scaler.fit_transform(num_train)  # (1460, 36)
-    scaled_test = scaler.transform(num_test)  # (1459, 36)
-    scaled_train_num = pd.DataFrame(scaled_train, columns=num_columns, index=ind_train)
-    scaled_test_num = pd.DataFrame(scaled_test, columns=num_columns, index=ind_test)
-    train = scaled_train_num.join(obj_train)
-    test = scaled_test_num.join(obj_test)
+    if scale:
+        scaled_train, scaled_test = scale_func(num_train, num_test)
+        train = scaled_train.join(obj_train)
+        test = scaled_test.join(obj_test)
 
     # Label encodes category columns
     encoded_train, encoded_test, cols = encode(obj_train, obj_test, encoder)
@@ -108,7 +113,7 @@ if __name__ == '__main__':
 
     # Rejons one-hot with numeric
     train, test = rejoin(train, test, train_dummy, test_dummy)
-
+    print(train, test)
     # Finishes with a CSV
     train.to_csv('new_feat_train.csv', index=True)
     test.to_csv('new_feat_test.csv', index=True)
